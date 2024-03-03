@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TK Designer</title>
+<style>
+  .container {
+    display: flex;
+    width: 1400px; /* Breite des Containers einschließlich aller Divs */
+    height: 600px;
+  }
+
+  #canvas {
+    width: 800px;
+    height: 600px;
+    border: 2px solid red; /* Roter Rahmen um das Canvas */
+    position: relative; /* Positionierung für die absoluten Positionierung der UI-Elemente */
+  }
+
+  .ui-element {
+    border: 1px solid black;
+    position: absolute; /* Absolute Positionierung innerhalb des Containers */
+    cursor: move; /* Mauszeiger als Hand, um das Element zu bewegen */
+  }
+
+  /* Stil für das Raster */
+  .grid {
+    background-image:
+      linear-gradient(90deg, transparent 9px, grey 10px),
+      linear-gradient(180deg, transparent 9px, grey 10px);
+    background-size: 10px 10px;
+    background-position: -1px -1px;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  #code-display {
+    width: 500px;
+    height: 600px;
+    border: 2px solid blue; /* Blauer Rahmen um das Code-Div */
+    overflow: auto; /* Scrollen, wenn der Code zu lang ist */
+  }
+
+  .options {
+    width: 300px;
+    height: 600px;
+    border: 2px solid green; /* Grüner Rahmen um das Options-Div */
+  }
+
+  .options table {
+    width: 100%;
+  }
+
+  .options th, .options td {
+    padding: 5px;
+    text-align: left;
+  }
+
+  .options input {
+    width: 100%;
+  }
+
+  .btn {
+    margin: 5px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div id="canvas">
+      <!-- Raster -->
+      <div class="grid"></div>
+    </div>
+    <div class="options">
+      <table>
+        <tr>
+          <th>Property</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td><label for="width">Width:</label></td>
+          <td><input type="text" id="width" oninput="updateCanvasElement('width', this.value)"></td>
+        </tr>
+        <tr>
+          <td><label for="height">Height:</label></td>
+          <td><input type="text" id="height" oninput="updateCanvasElement('height', this.value)"></td>
+        </tr>
+        <tr>
+          <td><label for="id">ID:</label></td>
+          <td><input type="text" id="id" oninput="updateCanvasElement('id', this.value)"></td>
+        </tr>
+        <tr>
+          <td><label for="text">Text:</label></td>
+          <td><input type="text" id="text" oninput="updateCanvasElement('text', this.value)"></td>
+        </tr>
+        <tr>
+          <td><label for="font">Font:</label></td>
+          <td><input type="text" id="font" oninput="updateCanvasElement('font-family', this.value)"></td>
+        </tr>
+        <tr>
+          <td><label for="fontSize">Font Size:</label></td>
+          <td><input type="text" id="fontSize" oninput="updateCanvasElement('font-size', this.value)"></td>
+        </tr>
+        <tr>
+          <td><label for="fontColor">Font Color:</label></td>
+          <td><input type="color" id="fontColor" oninput="updateCanvasElement('color', this.value)"></td>
+        </tr>
+        <tr>
+          <td><label for="bgColor">Bg. Color:</label></td>
+          <td><input type="color" id="bgColor" oninput="updateCanvasElement('background-color', this.value)"></td>
+        </tr>
+        <tr>
+          <td><label>Font Style:</label></td>
+          <td>
+            <input type="checkbox" id="bold" onclick="updateCanvasElement('font-weight', this.checked ? 'bold' : 'normal')">
+            <label for="bold">Fett</label><br>
+            <input type="checkbox" id="normal" onclick="updateCanvasElement('font-style', this.checked ? 'normal' : '')">
+            <label for="normal">Normal</label><br>
+            <input type="checkbox" id="italic" onclick="updateCanvasElement('font-style', this.checked ? 'italic' : '')">
+            <label for="italic">Kursiv</label><br>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div id="code-display"></div> <!-- Zweites Div für den Python-Code -->
+  </div>
+  <div>
+  <h5>Widgets</h5>
+  <div class="container">
+    <div>
+    <button class="btn" onclick="createEntryField()">Text Box</button>
+    <button class="btn" onclick="createButton()">Button</button>
+    <button class="btn" onclick="createLabel()">Label</button>
+    <button class="btn" onclick="createCheckbox()">Check Box</button>
+	<div>
+	<div>
+	<button class="btn" onclick="deleteElement()">Delete</button>
+    <button class="btn" onclick="generatePythonCode()">Python Code generieren</button>
+	</div>
+  </div>
+  </div>
+
+  <script>
+    let selectedElement = null;
+
+    function createEntryField() {
+      const canvas = document.getElementById('canvas');
+      const entryField = document.createElement('input');
+      entryField.setAttribute('type', 'text');
+      entryField.setAttribute('class', 'ui-element');
+	  entryField.setAttribute('id', 'InputField_');
+	  entryField.style.fontFamily = 'Alial';
+	  entryField.style.fontSize = '12px';
+	  entryField.style.fontStyle = 'normal';
+	  entryField.style.backgroundColor = '#595959';
+	  entryField.style.color = '#ffffff';
+      entryField.style.width = '100px';
+      entryField.style.height = '20px';
+      entryField.style.left = '50px';
+      entryField.style.top = '50px'; // Beispielposition
+      canvas.appendChild(entryField);
+      makeDraggable(entryField);
+    }
+
+    function createButton() {
+      const canvas = document.getElementById('canvas');
+      const button = document.createElement('button');
+      button.setAttribute('class', 'ui-element');
+	  button.setAttribute('id', 'Button_');
+	  button.style.fontFamily = 'Alial';
+	  button.style.fontSize = '12px';
+	  button.style.fontStyle = 'normal';
+	  button.style.backgroundColor = '#595959';
+	  button.style.color = '#ffffff';
+      button.innerText = 'Button';
+      button.style.width = '80px';
+      button.style.height = '30px';
+      button.style.left = '150px';
+      button.style.top = '150px'; // Beispielposition
+      canvas.appendChild(button);
+      makeDraggable(button);
+    }
+
+    function createLabel() {
+      const canvas = document.getElementById('canvas');
+      const label = document.createElement('span');
+      label.setAttribute('class', 'ui-element');
+	  label.setAttribute('id', 'Label_');
+      label.innerText = 'Label_Text';
+	  label.style.fontFamily = 'Alial';
+	  label.style.fontSize = '12px';
+	  label.style.fontStyle = 'normal';
+	  label.style.backgroundColor = '#595959';
+	  label.style.color = '#ffffff';
+	  label.style.width = '80px';
+      label.style.height = '30px';
+      label.style.left = '250px';
+      label.style.top = '250px'; // Beispielposition
+      canvas.appendChild(label);
+      makeDraggable(label);
+    }
+
+    function createCheckbox() {
+      const canvas = document.getElementById('canvas');
+      const checkbox = document.createElement('input');
+      checkbox.setAttribute('type', 'checkbox');
+      checkbox.setAttribute('class', 'ui-element');
+      checkbox.setAttribute('id', 'Checkbox_');
+	  checkbox.style.fontFamily = 'Arial';
+	  checkbox.style.fontSize = '12px';
+	  checkbox.style.bgColor = '#595959';
+	  checkbox.style.fontColor = '#ffffff';
+      checkbox.style.width = '20px';
+      checkbox.style.height = '20px';
+      checkbox.style.left = '350px';
+      checkbox.style.top = '350px'; // Beispielposition
+      canvas.appendChild(checkbox);
+      makeDraggable(checkbox);
+    }
+
+    function makeDraggable(element) {
+      element.addEventListener('mousedown', function (e) {
+        selectedElement = element;
+        const offsetX = e.clientX - parseInt(selectedElement.style.left);
+        const offsetY = e.clientY - parseInt(selectedElement.style.top);
+
+        // Anzeigen der Inputfelder
+        document.getElementById('width').value = selectedElement.style.width.replace('px', '');
+        document.getElementById('height').value = selectedElement.style.height.replace('px', '');
+        document.getElementById('id').value = selectedElement.id;
+        document.getElementById('text').value = selectedElement.innerText;
+        document.getElementById('font').value = selectedElement.style.fontFamily;
+        document.getElementById('fontSize').value = selectedElement.style.fontSize.replace('px', '');
+        document.getElementById('fontColor').value = rgbToHex(selectedElement.style.color);
+        document.getElementById('bgColor').value = rgbToHex(selectedElement.style.backgroundColor);
+        document.getElementById('bold').checked = selectedElement.style.fontWeight === 'bold';
+        document.getElementById('italic').checked = selectedElement.style.fontStyle === 'italic';
+        document.getElementById('normal').checked = !selectedElement.style.fontStyle || selectedElement.style.fontStyle === 'normal';
+
+        function moveElement(e) {
+          // Berechnen der nächsten 10-Pixel-Schritte
+          const newX = Math.round((e.clientX - offsetX) / 10) * 10;
+          const newY = Math.round((e.clientY - offsetY) / 10) * 10;
+          selectedElement.style.left = newX + 'px';
+          selectedElement.style.top = newY + 'px';
+          updateCanvasElement('left', newX + 'px');
+          updateCanvasElement('top', newY + 'px');
+        }
+
+        function releaseElement() {
+          document.removeEventListener('mousemove', moveElement);
+          document.removeEventListener('mouseup', releaseElement);
+        }
+
+        document.addEventListener('mousemove', moveElement);
+        document.addEventListener('mouseup', releaseElement);
+      });
+    }
+
+    function deleteElement() {
+      if (selectedElement) {
+        selectedElement.parentNode.removeChild(selectedElement);
+        selectedElement = null;
+        generatePythonCode();
+      }
+    }
+
+    function updateCanvasElement(property, value) {
+      if (selectedElement) {
+        selectedElement.style[property] = value + (property === 'font-size' ? 'px' : '');
+        if (property === 'id') {
+          selectedElement.id = value;
+        } else if (property === 'text') {
+          selectedElement.innerText = value;
+        } else if (property === 'color' || property === 'background-color') {
+          selectedElement.style[property] = value;
+        } else if (property === 'width' || property === 'height') {
+          selectedElement.style[property] = value + 'px';
+        }
+        generatePythonCode();
+      }
+    }
+
+    function generatePythonCode() {
+      const canvas = document.getElementById('canvas');
+      const uiElements = canvas.querySelectorAll('.ui-element');
+      let pythonCode = 'import tkinter as tk\n\nroot = tk.Tk()\n\n';
+      pythonCode += 'root.title("TK Designer Code")\n';
+      pythonCode += 'root.geometry("800x600")\n'; 
+	  pythonCode += 'root.configure(bg="blue")\n';
+	  pythonCode += 'root.resizable(False, False)\n\n';
+
+      uiElements.forEach(element => {
+        const elementType = element.tagName.toLowerCase();
+        let elementCode = '';
+        let width = element.style.width.replace('px', '');
+        let height = element.style.height.replace('px', '');
+        let id = element.id;
+        let text = element.innerText;
+        let fontFamily = element.style.fontFamily;
+        let fontSize = element.style.fontSize.replace('px', '');
+        let fontWeight = element.style.fontWeight === 'bold' ? 'bold' : 'normal';
+        let fontStyle = element.style.fontStyle === 'italic' ? 'italic' : 'normal';
+        let fontColor = rgbToHex(element.style.color);
+        let bgColor = rgbToHex(element.style.backgroundColor);
+        let left = element.style.left.replace('px', '');
+        let top = element.style.top.replace('px', '');
+
+        switch (elementType) {
+          case 'input':
+            elementCode = `${id} = tk.Entry(root, width=${width}, bg='${bgColor}', fg='${fontColor}', bd=3)\n`;
+            break;
+          case 'button':
+            elementCode = `${id} = tk.Button(root, text='${text}', width=${width}, height=${height}, bg='${bgColor}', anchor="center", fg='${fontColor}', bd=3)\n`;
+            break;
+          case 'span':
+            elementCode = `${id} = tk.Label(root, text='${text}', width=${width}, bg='${bgColor}', anchor="center", fg='${fontColor}', bd=3)\n`;
+            break;
+          case 'checkbox':
+            elementCode = `${id}_var = tk.BooleanVar(value=${element.checked})\n${id} = tk.Checkbutton(root, text='${text}', variable=${id}_var, bg='${bgColor}', fg='${fontColor}')\n`;
+            break;
+          default:
+            break;
+        }
+        const position = `${id}.place(x=${left}, y=${top})\n`;
+        const styleInfo = `# Setze Schriftart und Schriftgröße\n${id}.configure(font=("${fontFamily}", ${fontSize}, '${fontWeight}', '${fontStyle}'))\n`;
+
+        pythonCode += elementCode + position + styleInfo;
+      });
+
+      pythonCode += '\nroot.mainloop()';
+      document.getElementById('code-display').innerText = pythonCode;
+    }
+
+    // Funktion, um RGB-Farbwerte in Hexadezimalwerte umzuwandeln
+    function rgbToHex(rgb) {
+      if (!rgb || rgb === 'rgba(0, 0, 0, 0)') return '#000000';
+      const [r, g, b] = rgb.match(/\d+/g);
+      return `#${Number(r).toString(16).padStart(2, '0')}${Number(g).toString(16).padStart(2, '0')}${Number(b).toString(16).padStart(2, '0')}`;
+    }
+  </script>
+</body>
+</html>
